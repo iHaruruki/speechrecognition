@@ -1,20 +1,27 @@
 import speech_recognition as sr
 
-# Recognizerのインスタンスを作成
+# Recognizerのインスタンス作成
 r = sr.Recognizer()
 
-# マイクから音声を取得するための設定
+# マイクを使用して連続認識を実行
 with sr.Microphone() as source:
-    print("背景ノイズの調整を行います...")
-    r.adjust_for_ambient_noise(source)  # 周囲の雑音レベルに合わせて調整
-    print("話してください...")
-    audio = r.listen(source)  # マイクから音声を取得
+    # 背景ノイズに合わせて調整（最初に一度調整を実施）
+    print("背景ノイズの調整を行っています。しばらくお待ちください...")
+    r.adjust_for_ambient_noise(source)
+    print("連続音声認識を開始します。Ctrl+Cで終了できます。")
 
-try:
-    # Google Web Speech API を利用して音声を認識 (日本語設定: ja-JP)
-    text = r.recognize_google(audio, language="ja-JP")
-    print("音声認識結果:", text)
-except sr.UnknownValueError:
-    print("音声を認識できませんでした。")
-except sr.RequestError as e:
-    print("Google Speech Recognitionサービスへのリクエストに失敗しました; {0}".format(e))
+    while True:
+        try:
+            print("\n音声入力待ち...")
+            audio = r.listen(source)
+            try:
+                # Google Web Speech API を利用して音声をテキストに変換（日本語）
+                text = r.recognize_google(audio, language="ja-JP")
+                print("認識結果:", text)
+            except sr.UnknownValueError:
+                print("認識できませんでした。もう一度お試しください。")
+            except sr.RequestError as e:
+                print("認識サービスへのリクエストに失敗しました。エラー:", e)
+        except KeyboardInterrupt:
+            print("\nプログラムを終了します。")
+            break
