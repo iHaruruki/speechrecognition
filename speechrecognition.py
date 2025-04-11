@@ -1,10 +1,14 @@
+import lmstudio as lms
 import speech_recognition as sr
 import datetime
 
-# Recognizerのインスタンスを生成
+# LM Studioのモデルを読み込みます（モデル名は環境に合わせて変更してください）
+model = lms.llm("llama-3.2-1b-instruct")
+
+# Recognizerのインスタンス生成
 r = sr.Recognizer()
 
-# 認識したテキストを保存するリスト
+# 認識したテキストを保持するリスト
 recognized_texts = []
 
 with sr.Microphone() as source:
@@ -21,6 +25,11 @@ with sr.Microphone() as source:
                 text = r.recognize_google(audio, language="ja-JP")
                 print("認識結果:", text)
                 recognized_texts.append(text)
+
+                # 認識したテキストをLM Studio APIに渡して返答を取得する
+                result = model.respond(text)
+                print("LM Studioの返答:", result)
+
             except sr.UnknownValueError:
                 print("音声を認識できませんでした。")
             except sr.RequestError as e:
@@ -28,16 +37,13 @@ with sr.Microphone() as source:
     except KeyboardInterrupt:
         print("\nCtrl+C が押されました。認識を停止し、テキストをファイルに保存します。")
 
-# 認識したテキストがある場合にファイルへ保存
+# 認識したテキストがある場合、タイムスタンプ付きでファイルに保存する
 if recognized_texts:
-    # タイムスタンプを使ってファイル名を生成
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = f"recognized_text_{timestamp}.txt"
-
-    # テキストファイルとして保存（UTF-8エンコーディング）
     with open(filename, "w", encoding="utf-8") as f:
         for line in recognized_texts:
             f.write(line + "\n")
     print("認識したテキストを保存しました:", filename)
 else:
-    print("認識したテキストがありませんでした。")
+    print("認識したテキストはありませんでした。")
